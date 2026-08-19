@@ -9,6 +9,9 @@ import '../blocs/dashboard/dashboard_event.dart';
 import '../screens/dashboard_screen.dart';
 import '../../core/theme/theme_cubit.dart';
 
+import '../screens/product_screen.dart';
+import '../blocs/product/product_bloc.dart';
+import '../blocs/product/product_event.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -21,9 +24,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _pages = [
     const DashboardOverview(),
-    const Center(
-      child: Text('Quản lý Sản phẩm', style: TextStyle(fontSize: 24)),
-    ),
+    const ProductScreen(),
     const Center(
       child: Text('Nhập / Xuất Kho', style: TextStyle(fontSize: 24)),
     ),
@@ -177,7 +178,7 @@ class _MainLayoutState extends State<MainLayout> {
                         children: [
                           // Breadcrumb
                           Text(
-                            'Dashboards',
+                            _getCategoryTitle(_selectedIndex),
                             style: TextStyle(
                               color: colors.textSecond,
                               fontSize: 13,
@@ -238,6 +239,8 @@ class _MainLayoutState extends State<MainLayout> {
                             onTap: () {
                               if (_selectedIndex == 0) {
                                 context.read<DashboardBloc>().add(DashboardSummaryRequested());
+                              } else if (_selectedIndex == 1) {
+                                context.read<ProductBloc>().add(ProductListRequested());
                               }
                             },
                             child: Icon(
@@ -450,6 +453,12 @@ class _MainLayoutState extends State<MainLayout> {
       default:
         return '';
     }
+  }
+
+  String _getCategoryTitle(int index) {
+    if (index >= 0 && index <= 2) return 'Menu Chính';
+    if (index >= 3 && index <= 4) return 'Quản Trị';
+    return '';
   }
 }
 

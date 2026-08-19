@@ -28,7 +28,8 @@ namespace Inventory.Application.Services
                 SKU = p.Sku,
                 Name = p.Name,
                 BasePrice = p.BasePrice,
-                CategoryName = p.Category != null ? p.Category.Name : "Không có danh mục"
+                CategoryName = p.Category != null ? p.Category.Name : "Không có danh mục",
+                TotalQuantity = p.InventoryLevels.Sum(il => il.Quantity)
             }).ToList();
 
             return productDtos;
@@ -45,7 +46,8 @@ namespace Inventory.Application.Services
                 SKU = product.Sku,
                 Name = product.Name,
                 BasePrice = product.BasePrice,
-                CategoryName = product.Category != null ? product.Category.Name : "Không có danh mục"
+                CategoryName = product.Category != null ? product.Category.Name : "Không có danh mục",
+                TotalQuantity = product.InventoryLevels.Sum(il => il.Quantity)
             };
         }
 
@@ -133,6 +135,11 @@ namespace Inventory.Application.Services
             if (product == null)
             {
                 throw new Exception($"Không tìm thấy sản phẩm có mã ID = {id}");
+            }
+
+            if (product.InventoryLevels.Sum(il => il.Quantity) > 0)
+            {
+                throw new Exception("Không thể xóa sản phẩm này vì vẫn còn hàng tồn kho!");
             }
 
             // Gọi hàm Xóa Mềm

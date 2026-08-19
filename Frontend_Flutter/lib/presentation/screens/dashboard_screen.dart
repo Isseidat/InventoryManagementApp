@@ -490,7 +490,7 @@ class _ActivityTable extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Giao dịch hôm nay',
+                  'Giao dịch gần nhất',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,

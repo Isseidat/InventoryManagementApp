@@ -21,6 +21,7 @@ namespace Inventory.Infrastructure.Repositories
             // Chỉ lấy những sản phẩm CHƯA BỊ XÓA
             return await _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.InventoryLevels)
                 .Where(p => p.IsDeleted == false)
                 .ToListAsync();
         }
@@ -45,7 +46,9 @@ namespace Inventory.Infrastructure.Repositories
 
         public async Task<Product?> GetProductByIdAsync(int id)
         {
-            return await _context.Products.FirstOrDefaultAsync(p => p.Id == id && p.IsDeleted == false);
+            return await _context.Products
+                .Include(p => p.InventoryLevels)
+                .FirstOrDefaultAsync(p => p.Id == id && p.IsDeleted == false);
         }
 
         public async Task UpdateProductAsync(Product product)

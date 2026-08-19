@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,5 +11,6 @@ namespace Inventory.Application.DTOs.Products
         public string Name { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        public int TotalQuantity { get; set; }
     }
 }
