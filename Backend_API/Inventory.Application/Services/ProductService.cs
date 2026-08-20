@@ -28,8 +28,13 @@ namespace Inventory.Application.Services
                 SKU = p.Sku,
                 Name = p.Name,
                 BasePrice = p.BasePrice,
+                Unit = p.Unit,
+                PackingUnit = p.PackingUnit,
+                ConversionRate = p.ConversionRate,
+                CategoryId = p.CategoryId,
                 CategoryName = p.Category != null ? p.Category.Name : "Không có danh mục",
-                TotalQuantity = p.InventoryLevels.Sum(il => il.Quantity)
+                TotalQuantity = p.InventoryLevels.Sum(il => il.Quantity),
+                ReorderLevel = p.ReorderLevel
             }).ToList();
 
             return productDtos;
@@ -46,8 +51,13 @@ namespace Inventory.Application.Services
                 SKU = product.Sku,
                 Name = product.Name,
                 BasePrice = product.BasePrice,
+                Unit = product.Unit,
+                PackingUnit = product.PackingUnit,
+                ConversionRate = product.ConversionRate,
+                CategoryId = product.CategoryId,
                 CategoryName = product.Category != null ? product.Category.Name : "Không có danh mục",
-                TotalQuantity = product.InventoryLevels.Sum(il => il.Quantity)
+                TotalQuantity = product.InventoryLevels.Sum(il => il.Quantity),
+                ReorderLevel = product.ReorderLevel
             };
         }
 
@@ -85,6 +95,8 @@ namespace Inventory.Application.Services
                 CategoryId = dto.CategoryId,
                 BasePrice = dto.BasePrice,
                 Unit = dto.Unit,
+                PackingUnit = dto.PackingUnit,
+                ConversionRate = dto.ConversionRate,
                 ReorderLevel = dto.ReorderLevel,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
@@ -121,6 +133,8 @@ namespace Inventory.Application.Services
             product.CategoryId = dto.CategoryId;
             product.BasePrice = dto.BasePrice;
             product.Unit = dto.Unit;
+            product.PackingUnit = dto.PackingUnit;
+            product.ConversionRate = dto.ConversionRate;
             product.ReorderLevel = dto.ReorderLevel;
             product.UpdatedAt = DateTime.Now;
 

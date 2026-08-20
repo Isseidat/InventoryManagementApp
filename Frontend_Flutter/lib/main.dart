@@ -37,8 +37,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) => di.sl<AuthBloc>()..add(CheckAuthStatus()),
+        BlocProvider.value(
+          value: di.sl<AuthBloc>()..add(CheckAuthStatus()),
         ),
         BlocProvider(
           create: (_) => di.sl<DashboardBloc>()..add(DashboardSummaryRequested()),
@@ -46,15 +46,14 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(
           create: (_) => di.sl<ProductBloc>()..add(ProductListRequested()),
         ),
-        BlocProvider(
-          create: (_) => ThemeCubit(), // Dark mode mặc định
+        BlocProvider.value(
+          value: di.sl<ThemeCubit>(),
         ),
       ],
       child: BlocBuilder<ThemeCubit, bool>(
         builder: (context, isDark) {
-          return AnimatedTheme(
+          return Theme(
             data: isDark ? AppTheme.dark : AppTheme.light,
-            duration: const Duration(milliseconds: 300),
             child: MaterialApp.router(
               title: 'InventoryPro',
               theme: AppTheme.light,

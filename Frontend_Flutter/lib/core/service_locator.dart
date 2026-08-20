@@ -9,6 +9,7 @@ import '../data/repositories/auth_repository_impl.dart';
 import '../presentation/blocs/auth/auth_bloc.dart';
 import '../presentation/blocs/dashboard/dashboard_bloc.dart';
 import '../presentation/blocs/product/product_bloc.dart';
+import '../core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -41,4 +42,5 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AuthBloc(authRepository: sl()));
   sl.registerFactory(() => DashboardBloc(dio: sl<DioClient>().dio));
   sl.registerFactory(() => ProductBloc(dio: sl<DioClient>().dio));
+  sl.registerLazySingleton(() => ThemeCubit());
 }

@@ -20,7 +20,10 @@ class _ProductDialogState extends State<ProductDialog> {
   final _skuCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
-
+  final _unitCtrl = TextEditingController();
+  final _packingUnitCtrl = TextEditingController();
+  final _conversionRateCtrl = TextEditingController();
+  
   int? _selectedCategoryId;
   List<dynamic> _categories = [];
   bool _isLoading = true;
@@ -31,8 +34,12 @@ class _ProductDialogState extends State<ProductDialog> {
     if (widget.product != null) {
       _skuCtrl.text = widget.product!['sku']?.toString() ?? '';
       _nameCtrl.text = widget.product!['name']?.toString() ?? '';
-      _priceCtrl.text = widget.product!['basePrice']?.toString() ?? '';
-      // Category selection will be matched after fetching categories
+      final price = double.tryParse(widget.product!['basePrice']?.toString() ?? '0') ?? 0;
+      _priceCtrl.text = price == price.toInt() ? price.toInt().toString() : price.toString();
+      _selectedCategoryId = widget.product!['categoryId'];
+      _unitCtrl.text = widget.product!['unit']?.toString() ?? '';
+      _packingUnitCtrl.text = widget.product!['packingUnit']?.toString() ?? '';
+      _conversionRateCtrl.text = widget.product!['conversionRate']?.toString() ?? '';
     }
     _fetchCategories();
   }
@@ -40,18 +47,15 @@ class _ProductDialogState extends State<ProductDialog> {
   Future<void> _fetchCategories() async {
     try {
       final dio = sl<DioClient>().dio;
-      final response = await dio.get('/Categories');
-      if (response.statusCode == 200 && response.data != null) {
+      final res = await dio.get('/Categories');
+      if (res.data is List) {
         setState(() {
-          _categories = response.data;
+          _categories = res.data;
           _isLoading = false;
-          
-          if (widget.product != null) {
-            final catName = widget.product!['categoryName'];
-            final match = _categories.where((c) => c['name'] == catName).toList();
-            if (match.isNotEmpty) {
-              _selectedCategoryId = match.first['id'];
-            }
+          // Validate existing categoryId
+          if (_selectedCategoryId != null) {
+            final exists = _categories.any((c) => c['id'] == _selectedCategoryId);
+            if (!exists) _selectedCategoryId = null;
           }
         });
       }
@@ -74,6 +78,9 @@ class _ProductDialogState extends State<ProductDialog> {
         'name': _nameCtrl.text.trim(),
         'basePrice': double.tryParse(_priceCtrl.text.trim()) ?? 0,
         'categoryId': _selectedCategoryId,
+        'unit': _unitCtrl.text.trim(),
+        'packingUnit': _packingUnitCtrl.text.trim().isEmpty ? null : _packingUnitCtrl.text.trim(),
+        'conversionRate': int.tryParse(_conversionRateCtrl.text.trim()),
       };
 
       if (widget.product == null) {
@@ -170,7 +177,13 @@ class _ProductDialogState extends State<ProductDialog> {
                               filled: true,
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty ? 'Bắt buộc' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Bắt buộc';
+                              final price = double.tryParse(v);
+                              if (price == null) return 'Phải là số';
+                              if (price < 0) return 'Giá phải >= 0';
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -191,6 +204,55 @@ class _ProductDialogState extends State<ProductDialog> {
                             }).toList(),
                             onChanged: (val) {
                               setState(() => _selectedCategoryId = val);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: _unitCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Đơn vị tính (VD: Gói)',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              filled: true,
+                            ),
+                            validator: (v) => v!.isEmpty ? 'Bắt buộc' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: _packingUnitCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Đơn vị lớn (Tùy chọn, VD: Thùng)',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              filled: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: _conversionRateCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Quy đổi (Tùy chọn, VD: 24)',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              filled: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (v) {
+                              if (v != null && v.isNotEmpty) {
+                                final val = int.tryParse(v);
+                                if (val == null || val <= 0) return 'Phải > 0';
+                              }
+                              return null;
                             },
                           ),
                         ),

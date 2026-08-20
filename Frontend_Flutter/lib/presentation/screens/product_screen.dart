@@ -5,6 +5,7 @@ import '../blocs/product/product_state.dart';
 import '../blocs/product/product_event.dart';
 import '../../core/theme/theme_cubit.dart';
 import 'product_dialog.dart';
+import 'product_detail_screen.dart';
 
 // Copying some color extensions for local use from main_layout
 class _AppColorTokens {
@@ -55,15 +56,35 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row: Title & Add Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+    return BlocListener<ProductBloc, ProductState>(
+      listener: (context, state) {
+        if (state is ProductActionSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else if (state is ProductActionFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Row: Title & Add Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
               Text(
                 'Quản lý Sản phẩm',
                 style: TextStyle(
@@ -114,12 +135,24 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      showDialog(
+                      showGeneralDialog(
                         context: context,
-                        builder: (_) => BlocProvider.value(
+                        barrierDismissible: true,
+                        barrierLabel: '',
+                        transitionDuration: const Duration(milliseconds: 400),
+                        pageBuilder: (ctx, anim1, anim2) => BlocProvider.value(
                           value: context.read<ProductBloc>(),
                           child: const ProductDialog(),
                         ),
+                        transitionBuilder: (ctx, anim1, anim2, child) {
+                          return Transform.scale(
+                            scale: Curves.easeOutBack.transform(anim1.value),
+                            child: Opacity(
+                              opacity: anim1.value,
+                              child: child,
+                            ),
+                          );
+                        },
                       );
                     },
                     icon: const Icon(Icons.add, size: 18),
@@ -253,9 +286,10 @@ class _ProductScreenState extends State<ProductScreen> {
                                         children: [
                                           InkWell(
                                             onTap: () {
-                                              // TODO: Navigate to transactions screen for this product
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Tính năng đang phát triển')),
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => ProductDetailScreen(product: p),
+                                                ),
                                               );
                                             },
                                             child: Icon(Icons.remove_red_eye_outlined, size: 16, color: colors.textSecond),
@@ -263,12 +297,24 @@ class _ProductScreenState extends State<ProductScreen> {
                                           const SizedBox(width: 12),
                                           InkWell(
                                             onTap: () {
-                                              showDialog(
+                                              showGeneralDialog(
                                                 context: context,
-                                                builder: (_) => BlocProvider.value(
+                                                barrierDismissible: true,
+                                                barrierLabel: '',
+                                                transitionDuration: const Duration(milliseconds: 400),
+                                                pageBuilder: (ctx, anim1, anim2) => BlocProvider.value(
                                                   value: context.read<ProductBloc>(),
                                                   child: ProductDialog(product: p),
                                                 ),
+                                                transitionBuilder: (ctx, anim1, anim2, child) {
+                                                  return Transform.scale(
+                                                    scale: Curves.easeOutBack.transform(anim1.value),
+                                                    child: Opacity(
+                                                      opacity: anim1.value,
+                                                      child: child,
+                                                    ),
+                                                  );
+                                                },
                                               );
                                             },
                                             child: Icon(Icons.edit_outlined, size: 16, color: colors.textSecond),
@@ -314,6 +360,7 @@ class _ProductScreenState extends State<ProductScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -409,9 +409,7 @@ class _StatCard extends StatelessWidget {
                   animation: countAnim,
                   builder: (context, child) {
                     final displayed = (stat.value * countAnim.value).round();
-                    final formatted = stat.label.contains('kho')
-                        ? '${displayed}M'
-                        : displayed >= 1000
+                    final formatted = displayed >= 1000
                         ? '${(displayed / 1000).toStringAsFixed(1)}K'
                         : '$displayed';
                     return Text(

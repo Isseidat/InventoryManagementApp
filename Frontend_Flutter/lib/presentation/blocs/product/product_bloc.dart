@@ -35,14 +35,14 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       final response = await dio.post('/Products/PostProduct', data: event.productData);
       if (response.data['status'] == true) {
-        add(ProductListRequested());
+        emit(ProductActionSuccess(response.data['message'] ?? 'Thêm sản phẩm thành công!'));
       } else {
-        // Emit failure, but keep the list
-        add(ProductListRequested());
+        emit(ProductActionFailure(response.data['message'] ?? 'Thêm sản phẩm thất bại!'));
       }
     } catch (e) {
-      add(ProductListRequested());
+      emit(ProductActionFailure('Lỗi hệ thống: $e'));
     }
+    add(ProductListRequested());
   }
 
   Future<void> _onProductUpdated(
@@ -50,11 +50,14 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       final response = await dio.put('/Products/${event.id}', data: event.productData);
       if (response.data['status'] == true) {
-        add(ProductListRequested());
+        emit(ProductActionSuccess(response.data['message'] ?? 'Cập nhật thành công!'));
+      } else {
+        emit(ProductActionFailure(response.data['message'] ?? 'Cập nhật thất bại!'));
       }
     } catch (e) {
-      add(ProductListRequested());
+      emit(ProductActionFailure('Lỗi hệ thống: $e'));
     }
+    add(ProductListRequested());
   }
 
   Future<void> _onProductDeleted(
@@ -62,10 +65,13 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     try {
       final response = await dio.delete('/Products/${event.id}');
       if (response.data['status'] == true) {
-        add(ProductListRequested());
+        emit(ProductActionSuccess(response.data['message'] ?? 'Xóa thành công!'));
+      } else {
+        emit(ProductActionFailure(response.data['message'] ?? 'Xóa thất bại!'));
       }
     } catch (e) {
-      add(ProductListRequested());
+      emit(ProductActionFailure('Lỗi hệ thống: $e'));
     }
+    add(ProductListRequested());
   }
 }

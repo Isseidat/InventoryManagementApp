@@ -130,6 +130,7 @@ public partial class ApplicationDbContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("SKU");
             entity.Property(e => e.Unit).HasMaxLength(20);
+            entity.Property(e => e.PackingUnit).HasMaxLength(50);
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");

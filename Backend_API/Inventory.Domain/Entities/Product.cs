@@ -19,6 +19,10 @@ public partial class Product
 
     public string Unit { get; set; } = null!;
 
+    public string? PackingUnit { get; set; }
+
+    public int? ConversionRate { get; set; }
+
     public int ReorderLevel { get; set; }
 
     public DateTime? CreatedAt { get; set; }

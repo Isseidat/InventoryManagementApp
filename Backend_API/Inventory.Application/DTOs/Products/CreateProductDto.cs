@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,6 +12,8 @@ namespace Inventory.Application.DTOs.Products
         public int? CategoryId { get; set; } 
         public decimal BasePrice { get; set; }
         public string Unit { get; set; } = string.Empty;
+        public string? PackingUnit { get; set; }
+        public int? ConversionRate { get; set; }
         public int ReorderLevel { get; set; }
     }
 }

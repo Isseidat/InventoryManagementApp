@@ -55,8 +55,7 @@ class _MainLayoutState extends State<MainLayout> {
           body: Row(
             children: [
               // ── SIDEBAR ─────────────────────────────────────────────
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              Container(
                 width: 255,
                 decoration: BoxDecoration(
                   color: colors.bgSidebar,
@@ -164,8 +163,7 @@ class _MainLayoutState extends State<MainLayout> {
                 child: Column(
                   children: [
                     // Topbar
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
+                    Container(
                       height: 74,
                       decoration: BoxDecoration(
                         color: colors.bgTopbar,
