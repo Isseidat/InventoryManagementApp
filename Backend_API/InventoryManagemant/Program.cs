@@ -109,6 +109,10 @@ namespace InventoryManagemant
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            
+            // Add MemoryCache for OTPs
+            builder.Services.AddMemoryCache();
 
             var app = builder.Build();
 

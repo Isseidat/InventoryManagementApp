@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
@@ -12,6 +13,7 @@ import '../../core/theme/theme_cubit.dart';
 import '../screens/product_screen.dart';
 import '../blocs/product/product_bloc.dart';
 import '../blocs/product/product_event.dart';
+
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -149,7 +151,8 @@ class _MainLayoutState extends State<MainLayout> {
                             icon: Icons.logout_rounded,
                             color: colors.textSecond,
                             tooltip: 'Đăng xuất',
-                            onTap: () => context.read<AuthBloc>().add(LogoutRequested()),
+                            onTap: () =>
+                                context.read<AuthBloc>().add(LogoutRequested()),
                           ),
                         ],
                       ),
@@ -203,7 +206,9 @@ class _MainLayoutState extends State<MainLayout> {
                             width: 220,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF161B22) : const Color(0xFFF8FAFC),
+                              color: isDark
+                                  ? const Color(0xFF161B22)
+                                  : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TextField(
@@ -236,9 +241,13 @@ class _MainLayoutState extends State<MainLayout> {
                             colors: colors,
                             onTap: () {
                               if (_selectedIndex == 0) {
-                                context.read<DashboardBloc>().add(DashboardSummaryRequested());
+                                context.read<DashboardBloc>().add(
+                                  DashboardSummaryRequested(),
+                                );
                               } else if (_selectedIndex == 1) {
-                                context.read<ProductBloc>().add(ProductListRequested());
+                                context.read<ProductBloc>().add(
+                                  ProductListRequested(),
+                                );
                               }
                             },
                             child: Icon(
@@ -281,7 +290,9 @@ class _MainLayoutState extends State<MainLayout> {
                               children: [
                                 Icon(
                                   Icons.notifications_active_rounded,
-                                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF3B82F6),
+                                  color: isDark
+                                      ? const Color(0xFF60A5FA)
+                                      : const Color(0xFF3B82F6),
                                   size: 18,
                                 ),
                                 Positioned(
@@ -304,16 +315,84 @@ class _MainLayoutState extends State<MainLayout> {
                           // Avatar Block
                           Row(
                             children: [
-                              CircleAvatar(
-                                radius: 17,
-                                backgroundColor: const Color(0xFF8B5CF6),
-                                child: Text(
-                                  _getInitials(user.fullName),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
+                              PopupMenuButton<String>(
+                                offset: const Offset(0, 40),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                onSelected: (value) {
+                                  if (value == 'profile') {
+                                    context.push('/profile');
+                                  } else if (value == 'logout') {
+                                    context.read<AuthBloc>().add(
+                                      LogoutRequested(),
+                                    );
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'profile',
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.person_outline_rounded,
+                                          color: colors.textPrimary,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Hồ sơ của tôi',
+                                          style: TextStyle(
+                                            color: colors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  const PopupMenuDivider(height: 1),
+                                  PopupMenuItem(
+                                    value: 'logout',
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.logout_rounded,
+                                          color: Colors.redAccent,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          'Đăng xuất',
+                                          style: TextStyle(
+                                            color: Colors.redAccent,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: const Color(0xFF6366F1),
+                                      child: Text(
+                                        user.fullName.isNotEmpty
+                                            ? user.fullName[0].toUpperCase()
+                                            : 'U',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: colors.textSecond,
+                                      size: 16,
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -330,7 +409,9 @@ class _MainLayoutState extends State<MainLayout> {
                                     ),
                                   ),
                                   Text(
-                                    user.roleName == 'Admin' ? 'Administrator' : (user.jobTitle ?? user.roleName),
+                                    user.roleName == 'Admin'
+                                        ? 'Administrator'
+                                        : (user.jobTitle ?? user.roleName),
                                     style: TextStyle(
                                       color: colors.textSecond,
                                       fontSize: 11,
@@ -404,7 +485,7 @@ class _MainLayoutState extends State<MainLayout> {
             Icon(
               icon,
               size: 16,
-              color: isSelected 
+              color: isSelected
                   ? const Color(0xFF6366F1) // Indigo
                   : colors.textSecond,
             ),
@@ -413,8 +494,8 @@ class _MainLayoutState extends State<MainLayout> {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isSelected 
-                      ? (isDark ? Colors.white : colors.textPrimary) 
+                  color: isSelected
+                      ? (isDark ? Colors.white : colors.textPrimary)
                       : colors.textSecond,
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

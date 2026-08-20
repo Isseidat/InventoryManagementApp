@@ -127,8 +127,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final int qty = widget.product['totalQuantity'] ?? 0;
-    final bool inStock = qty > 0;
-    final product = widget.product;
+    // final bool inStock = qty > 0;
+    // final product = widget.product;
 
     return Scaffold(
       backgroundColor: colors.bgPrimary,

@@ -255,6 +255,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.PasswordHash)
                 .HasMaxLength(255)
                 .IsUnicode(false);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.Username)
                 .HasMaxLength(50)
                 .IsUnicode(false);
