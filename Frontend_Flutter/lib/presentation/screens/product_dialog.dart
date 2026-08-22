@@ -5,6 +5,7 @@ import '../../core/service_locator.dart';
 import '../../core/network/dio_client.dart';
 import '../blocs/product/product_bloc.dart';
 import '../blocs/product/product_event.dart';
+import '../blocs/product/product_state.dart';
 
 class ProductDialog extends StatefulWidget {
   final Map<String, dynamic>? product; // null = Add, non-null = Edit
@@ -23,25 +24,76 @@ class _ProductDialogState extends State<ProductDialog> {
   final _unitCtrl = TextEditingController();
   final _packingUnitCtrl = TextEditingController();
   final _conversionRateCtrl = TextEditingController();
-  
+
   int? _selectedCategoryId;
   List<dynamic> _categories = [];
   bool _isLoading = true;
 
+  List<String> _existingPackingUnits = [];
+  List<String> _existingConversionRates = [];
+
+  String? _selectedPackingUnitVal;
+  String? _selectedConversionRateVal;
+
+  bool _isCustomPackingUnit = false;
+  bool _isCustomConversionRate = false;
+
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
+
+    final state = context.read<ProductBloc>().state;
+    if (state is ProductLoaded) {
+      final pu = <String>{};
+      final cv = <String>{};
+      for (var p in state.products) {
+        if (p['packingUnit'] != null &&
+            p['packingUnit'].toString().isNotEmpty) {
+          pu.add(p['packingUnit'].toString());
+        }
+        if (p['conversionRate'] != null &&
+            p['conversionRate'].toString().isNotEmpty) {
+          cv.add(p['conversionRate'].toString());
+        }
+      }
+      _existingPackingUnits = pu.toList();
+      _existingConversionRates = cv.toList();
+    }
+
     if (widget.product != null) {
       _skuCtrl.text = widget.product!['sku']?.toString() ?? '';
       _nameCtrl.text = widget.product!['name']?.toString() ?? '';
-      final price = double.tryParse(widget.product!['basePrice']?.toString() ?? '0') ?? 0;
-      _priceCtrl.text = price == price.toInt() ? price.toInt().toString() : price.toString();
+      final price =
+          double.tryParse(widget.product!['basePrice']?.toString() ?? '0') ?? 0;
+      _priceCtrl.text = price == price.toInt()
+          ? price.toInt().toString()
+          : price.toString();
       _selectedCategoryId = widget.product!['categoryId'];
       _unitCtrl.text = widget.product!['unit']?.toString() ?? '';
-      _packingUnitCtrl.text = widget.product!['packingUnit']?.toString() ?? '';
-      _conversionRateCtrl.text = widget.product!['conversionRate']?.toString() ?? '';
+
+      final puVal = widget.product!['packingUnit']?.toString() ?? '';
+      if (puVal.isNotEmpty) {
+        if (_existingPackingUnits.contains(puVal)) {
+          _selectedPackingUnitVal = puVal;
+        } else {
+          _selectedPackingUnitVal = 'Khác';
+          _isCustomPackingUnit = true;
+          _packingUnitCtrl.text = puVal;
+        }
+      }
+
+      final cvVal = widget.product!['conversionRate']?.toString() ?? '';
+      if (cvVal.isNotEmpty) {
+        if (_existingConversionRates.contains(cvVal)) {
+          _selectedConversionRateVal = cvVal;
+        } else {
+          _selectedConversionRateVal = 'Khác';
+          _isCustomConversionRate = true;
+          _conversionRateCtrl.text = cvVal;
+        }
+      }
     }
-    _fetchCategories();
   }
 
   Future<void> _fetchCategories() async {
@@ -54,7 +106,9 @@ class _ProductDialogState extends State<ProductDialog> {
           _isLoading = false;
           // Validate existing categoryId
           if (_selectedCategoryId != null) {
-            final exists = _categories.any((c) => c['id'] == _selectedCategoryId);
+            final exists = _categories.any(
+              (c) => c['id'] == _selectedCategoryId,
+            );
             if (!exists) _selectedCategoryId = null;
           }
         });
@@ -67,9 +121,9 @@ class _ProductDialogState extends State<ProductDialog> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       if (_selectedCategoryId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng chọn danh mục')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn danh mục')));
         return;
       }
 
@@ -79,14 +133,40 @@ class _ProductDialogState extends State<ProductDialog> {
         'basePrice': double.tryParse(_priceCtrl.text.trim()) ?? 0,
         'categoryId': _selectedCategoryId,
         'unit': _unitCtrl.text.trim(),
-        'packingUnit': _packingUnitCtrl.text.trim().isEmpty ? null : _packingUnitCtrl.text.trim(),
-        'conversionRate': int.tryParse(_conversionRateCtrl.text.trim()),
+        'packingUnit': _isCustomPackingUnit
+            ? (_packingUnitCtrl.text.trim().isEmpty
+                  ? null
+                  : _packingUnitCtrl.text.trim())
+            : _selectedPackingUnitVal,
+        'conversionRate': _isCustomConversionRate
+            ? int.tryParse(_conversionRateCtrl.text.trim())
+            : int.tryParse(_selectedConversionRateVal ?? ''),
       };
 
       if (widget.product == null) {
         context.read<ProductBloc>().add(ProductAdded(data));
       } else {
-        context.read<ProductBloc>().add(ProductUpdated(widget.product!['id'], data));
+        bool isChanged = false;
+        if (data['sku'] != widget.product!['sku']) isChanged = true;
+        if (data['name'] != widget.product!['name']) isChanged = true;
+        if (data['basePrice'] != (widget.product!['basePrice'] ?? 0))
+          isChanged = true;
+        if (data['categoryId'] != widget.product!['categoryId'])
+          isChanged = true;
+        if (data['unit'] != widget.product!['unit']) isChanged = true;
+        if (data['packingUnit'] != widget.product!['packingUnit'])
+          isChanged = true;
+        if (data['conversionRate'] != widget.product!['conversionRate'])
+          isChanged = true;
+
+        if (!isChanged) {
+          Navigator.of(context).pop();
+          return;
+        }
+
+        context.read<ProductBloc>().add(
+          ProductUpdated(widget.product!['id'], data),
+        );
       }
       Navigator.of(context).pop();
     }
@@ -110,7 +190,7 @@ class _ProductDialogState extends State<ProductDialog> {
               color: Colors.black.withOpacity(0.1),
               blurRadius: 24,
               offset: const Offset(0, 8),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -118,11 +198,8 @@ class _ProductDialogState extends State<ProductDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEdit ? 'Sửa Sản phẩm' : 'Thêm Sản phẩm Mới',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              isEdit ? 'Điều chỉnh Sản phẩm' : 'Thêm Sản phẩm Mới',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -131,7 +208,10 @@ class _ProductDialogState extends State<ProductDialog> {
             ),
             const SizedBox(height: 24),
             if (_isLoading)
-              const SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))
+              const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else
               Form(
                 key: _formKey,
@@ -144,7 +224,9 @@ class _ProductDialogState extends State<ProductDialog> {
                             controller: _skuCtrl,
                             decoration: InputDecoration(
                               labelText: 'SKU (Mã SP)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               filled: true,
                             ),
                             validator: (v) => v!.isEmpty ? 'Bắt buộc' : null,
@@ -157,7 +239,9 @@ class _ProductDialogState extends State<ProductDialog> {
                             controller: _nameCtrl,
                             decoration: InputDecoration(
                               labelText: 'Tên Sản phẩm',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               filled: true,
                             ),
                             validator: (v) => v!.isEmpty ? 'Bắt buộc' : null,
@@ -173,7 +257,9 @@ class _ProductDialogState extends State<ProductDialog> {
                             controller: _priceCtrl,
                             decoration: InputDecoration(
                               labelText: 'Giá cơ bản (VNĐ)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               filled: true,
                             ),
                             keyboardType: TextInputType.number,
@@ -191,7 +277,9 @@ class _ProductDialogState extends State<ProductDialog> {
                           child: DropdownButtonFormField<int>(
                             decoration: InputDecoration(
                               labelText: 'Danh mục',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               filled: true,
                             ),
                             value: _selectedCategoryId,
@@ -211,6 +299,7 @@ class _ProductDialogState extends State<ProductDialog> {
                     ),
                     const SizedBox(height: 16),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           flex: 2,
@@ -218,7 +307,9 @@ class _ProductDialogState extends State<ProductDialog> {
                             controller: _unitCtrl,
                             decoration: InputDecoration(
                               labelText: 'Đơn vị tính (VD: Gói)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               filled: true,
                             ),
                             validator: (v) => v!.isEmpty ? 'Bắt buộc' : null,
@@ -227,33 +318,122 @@ class _ProductDialogState extends State<ProductDialog> {
                         const SizedBox(width: 16),
                         Expanded(
                           flex: 2,
-                          child: TextFormField(
-                            controller: _packingUnitCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Đơn vị lớn (Tùy chọn, VD: Thùng)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              filled: true,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  labelText: 'Đơn vị lớn (Tùy chọn)',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  filled: true,
+                                ),
+                                value: _selectedPackingUnitVal,
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: null,
+                                    child: Text('Không có'),
+                                  ),
+                                  ..._existingPackingUnits.map(
+                                    (u) => DropdownMenuItem(
+                                      value: u,
+                                      child: Text(u),
+                                    ),
+                                  ),
+                                  const DropdownMenuItem(
+                                    value: 'Khác',
+                                    child: Text('Khác...'),
+                                  ),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedPackingUnitVal = val;
+                                    _isCustomPackingUnit = val == 'Khác';
+                                    if (!_isCustomPackingUnit)
+                                      _packingUnitCtrl.clear();
+                                  });
+                                },
+                              ),
+                              if (_isCustomPackingUnit) ...[
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  controller: _packingUnitCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: 'Nhập đơn vị lớn mới',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    filled: true,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           flex: 2,
-                          child: TextFormField(
-                            controller: _conversionRateCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Quy đổi (Tùy chọn, VD: 24)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                              filled: true,
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (v) {
-                              if (v != null && v.isNotEmpty) {
-                                final val = int.tryParse(v);
-                                if (val == null || val <= 0) return 'Phải > 0';
-                              }
-                              return null;
-                            },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  labelText: 'Quy đổi (Tùy chọn)',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  filled: true,
+                                ),
+                                value: _selectedConversionRateVal,
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: null,
+                                    child: Text('Không có'),
+                                  ),
+                                  ..._existingConversionRates.map(
+                                    (c) => DropdownMenuItem(
+                                      value: c,
+                                      child: Text(c),
+                                    ),
+                                  ),
+                                  const DropdownMenuItem(
+                                    value: 'Khác',
+                                    child: Text('Khác...'),
+                                  ),
+                                ],
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedConversionRateVal = val;
+                                    _isCustomConversionRate = val == 'Khác';
+                                    if (!_isCustomConversionRate)
+                                      _conversionRateCtrl.clear();
+                                  });
+                                },
+                              ),
+                              if (_isCustomConversionRate) ...[
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  controller: _conversionRateCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: 'Nhập quy đổi mới',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    filled: true,
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (v) {
+                                    if (v != null && v.isNotEmpty) {
+                                      final val = int.tryParse(v);
+                                      if (val == null || val <= 0)
+                                        return 'Phải > 0';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
@@ -268,8 +448,13 @@ class _ProductDialogState extends State<ProductDialog> {
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: const Text('Hủy'),
                 ),
@@ -278,13 +463,21 @@ class _ProductDialogState extends State<ProductDialog> {
                   onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6366F1),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     elevation: 0,
                   ),
                   child: Text(
                     isEdit ? 'Lưu thay đổi' : 'Tạo mới',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

@@ -24,6 +24,16 @@ namespace InventoryManagemant
             builder.Services.AddControllers();
             builder.Services.AddHttpContextAccessor();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+
             // Cấu hình JWT Authentication
             var jwtSettings = builder.Configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings.GetValue<string>("SecretKey");
@@ -126,6 +136,7 @@ namespace InventoryManagemant
                 });
             }
 
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
 

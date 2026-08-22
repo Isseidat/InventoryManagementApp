@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
@@ -316,10 +317,12 @@ class _MainLayoutState extends State<MainLayout> {
                           Row(
                             children: [
                               PopupMenuButton<String>(
+                                tooltip: '',
                                 offset: const Offset(0, 40),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                color: colors.bgCard,
                                 onSelected: (value) {
                                   if (value == 'profile') {
                                     context.push('/profile');
@@ -332,7 +335,9 @@ class _MainLayoutState extends State<MainLayout> {
                                 itemBuilder: (context) => [
                                   PopupMenuItem(
                                     value: 'profile',
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
                                           Icons.person_outline_rounded,
@@ -344,15 +349,19 @@ class _MainLayoutState extends State<MainLayout> {
                                           'Hồ sơ của tôi',
                                           style: TextStyle(
                                             color: colors.textPrimary,
+                                            fontSize: 14,
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                       ],
                                     ),
                                   ),
                                   const PopupMenuDivider(height: 1),
                                   PopupMenuItem(
                                     value: 'logout',
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         const Icon(
                                           Icons.logout_rounded,
@@ -364,8 +373,10 @@ class _MainLayoutState extends State<MainLayout> {
                                           'Đăng xuất',
                                           style: TextStyle(
                                             color: Colors.redAccent,
+                                            fontSize: 14,
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                       ],
                                     ),
                                   ),
