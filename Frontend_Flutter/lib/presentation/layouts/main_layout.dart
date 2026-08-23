@@ -9,6 +9,7 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/dashboard/dashboard_bloc.dart';
 import '../blocs/dashboard/dashboard_event.dart';
 import '../screens/dashboard_screen.dart';
+import '../screens/user_profile_screen.dart';
 import '../../core/theme/theme_cubit.dart';
 
 import '../screens/product_screen.dart';
@@ -25,7 +26,9 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
+  Key _profileKey = UniqueKey();
+  
+  List<Widget> get _pages => [
     const DashboardOverview(),
     const ProductScreen(),
     const Center(
@@ -37,6 +40,7 @@ class _MainLayoutState extends State<MainLayout> {
     const Center(
       child: Text('Cài đặt hệ thống', style: TextStyle(fontSize: 24)),
     ),
+    UserProfileScreen(key: _profileKey),
   ];
 
   @override
@@ -139,6 +143,10 @@ class _MainLayoutState extends State<MainLayout> {
                       ),
                     if (user.roleName == 'Admin')
                       _navItem(4, Icons.settings_outlined, 'Cài đặt', colors),
+
+                    const SizedBox(height: 14),
+                    _sectionLabel('NGƯỜI DÙNG', colors),
+                    _navItem(5, Icons.person_outline_rounded, 'Hồ sơ của tôi', colors),
 
                     const Spacer(),
                     Divider(height: 1, color: colors.border),
@@ -249,6 +257,8 @@ class _MainLayoutState extends State<MainLayout> {
                                 context.read<ProductBloc>().add(
                                   ProductListRequested(),
                                 );
+                              } else if (_selectedIndex == 5) {
+                                setState(() => _profileKey = UniqueKey());
                               }
                             },
                             child: Icon(
@@ -324,9 +334,7 @@ class _MainLayoutState extends State<MainLayout> {
                                 ),
                                 color: colors.bgCard,
                                 onSelected: (value) {
-                                  if (value == 'profile') {
-                                    context.push('/profile');
-                                  } else if (value == 'logout') {
+                                  if (value == 'logout') {
                                     context.read<AuthBloc>().add(
                                       LogoutRequested(),
                                     );
@@ -334,32 +342,11 @@ class _MainLayoutState extends State<MainLayout> {
                                 },
                                 itemBuilder: (context) => [
                                   PopupMenuItem(
-                                    value: 'profile',
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.person_outline_rounded,
-                                          color: colors.textPrimary,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          'Hồ sơ của tôi',
-                                          style: TextStyle(
-                                            color: colors.textPrimary,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuDivider(height: 1),
-                                  PopupMenuItem(
                                     value: 'logout',
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -540,6 +527,8 @@ class _MainLayoutState extends State<MainLayout> {
         return 'Nhân sự';
       case 4:
         return 'Cài đặt';
+      case 5:
+        return 'Hồ sơ của tôi';
       default:
         return '';
     }
@@ -548,6 +537,7 @@ class _MainLayoutState extends State<MainLayout> {
   String _getCategoryTitle(int index) {
     if (index >= 0 && index <= 2) return 'Menu Chính';
     if (index >= 3 && index <= 4) return 'Quản Trị';
+    if (index == 5) return 'Người Dùng';
     return '';
   }
 }

@@ -59,6 +59,7 @@ class _MyAppState extends State<MyApp> {
               theme: AppTheme.light,
               darkTheme: AppTheme.dark,
               themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+              themeAnimationDuration: Duration.zero,
               routerConfig: _appRouter.router,
               debugShowCheckedModeBanner: false,
             ),

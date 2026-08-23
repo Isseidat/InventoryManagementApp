@@ -3,7 +3,7 @@ import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/blocs/auth/auth_state.dart';
 import '../../presentation/screens/login_screen.dart';
 import '../../presentation/layouts/main_layout.dart';
-import '../../presentation/screens/user_profile_screen.dart';
+
 import 'go_router_refresh_stream.dart';
 
 class AppRouter {
@@ -45,10 +45,6 @@ class AppRouter {
       GoRoute(
         path: '/home',
         builder: (context, state) => const MainLayout(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const UserProfileScreen(),
       ),
     ],
   );

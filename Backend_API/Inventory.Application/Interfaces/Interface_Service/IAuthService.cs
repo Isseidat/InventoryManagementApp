@@ -7,5 +7,9 @@ namespace Inventory.Application.Interfaces.Interface_Service
     {
         Task<TokenResponseDto> LoginAsync(LoginDto dto);
         Task<bool> RegisterAsync(RegisterDto dto);
+    
+        Task RequestPasswordResetAsync(ForgotPasswordRequestDto dto);
+        Task ResetPasswordAsync(ResetPasswordDto dto);
     }
+
 }

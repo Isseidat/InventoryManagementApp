@@ -44,5 +44,34 @@ namespace Inventory.Presentation.Controllers
                 return BadRequest(new { status = false, message = ex.Message });
             }
         }
+    
+        [Microsoft.AspNetCore.Mvc.HttpPost("ForgotPassword")]
+        public async Task<Microsoft.AspNetCore.Mvc.IActionResult> ForgotPassword([Microsoft.AspNetCore.Mvc.FromBody] ForgotPasswordRequestDto dto)
+        {
+            try
+            {
+                await _authService.RequestPasswordResetAsync(dto);
+                return Ok(new { status = true, message = "OTP sent." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+        }
+
+        [Microsoft.AspNetCore.Mvc.HttpPost("ResetPassword")]
+        public async Task<Microsoft.AspNetCore.Mvc.IActionResult> ResetPassword([Microsoft.AspNetCore.Mvc.FromBody] ResetPasswordDto dto)
+        {
+            try
+            {
+                await _authService.ResetPasswordAsync(dto);
+                return Ok(new { status = true, message = "Password reset successful." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { status = false, message = ex.Message });
+            }
+        }
     }
+
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+import '../../core/service_locator.dart';
+import '../../core/network/dio_client.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
@@ -195,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 40),
 
                         // Username
-                        _buildLabel('Tài khoản'),
+                        _buildLabel('Mật khẩu'),
                         const SizedBox(height: 6),
                         _buildTextField(
                           controller: _usernameController,
@@ -210,7 +213,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildLabel('Mật khẩu'),
                         const SizedBox(height: 6),
                         _buildPasswordField(context),
-                        const SizedBox(height: 32),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _showForgotPasswordDialog,
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF6366F1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
+                            ),
+                            child: const Text(
+                              'Quên mật khẩu?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
 
                         // Login Button
                         BlocConsumer<AuthBloc, AuthState>(
@@ -388,6 +412,349 @@ class _LoginScreenState extends State<LoginScreen> {
           borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (ctx, a1, a2) => const _ForgotPasswordDialog(),
+      transitionBuilder: (ctx, a1, a2, child) {
+        final curved = CurvedAnimation(parent: a1, curve: Curves.easeOutBack);
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.85, end: 1.0).animate(curved),
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  const _ForgotPasswordDialog();
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  int _step = 1;
+  bool _isLoading = false;
+  bool _obscureNew = true;
+  final _emailCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
+  final _newPassCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _otpCtrl.dispose();
+    _newPassCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _requestOtp() async {
+    if (_emailCtrl.text.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await sl<DioClient>().dio.post(
+        '/Auth/ForgotPassword',
+        data: {'email': _emailCtrl.text},
+      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _step = 2;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        String errorMsg = 'Lỗi gửi mã OTP';
+        if (e is DioException) {
+          errorMsg =
+              e.response?.data?['message']?.toString() ?? e.message ?? errorMsg;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _submitResetPassword() async {
+    if (_otpCtrl.text.isEmpty || _newPassCtrl.text.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await sl<DioClient>().dio.post(
+        '/Auth/ResetPassword',
+        data: {
+          'email': _emailCtrl.text,
+          'otp': _otpCtrl.text,
+          'newPassword': _newPassCtrl.text,
+        },
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đặt lại mật khẩu thành công! Hãy đăng nhập lại.'),
+            backgroundColor: Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        String errorMsg = 'Lỗi đặt lại mật khẩu';
+        if (e is DioException) {
+          errorMsg =
+              e.response?.data?['message']?.toString() ?? e.message ?? errorMsg;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 0,
+      backgroundColor: Colors.white,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.lock_reset_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Quên Mật Khẩu',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      Text(
+                        'Khôi phục quyền truy cập',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    style: IconButton.styleFrom(
+                      foregroundColor: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              if (_step == 1) ...[
+                const Text(
+                  'Nhập địa chỉ Gmail đã đăng ký để nhận mã OTP khôi phục mật khẩu.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF475569)),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Gmail của bạn',
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                      size: 20,
+                      color: Colors.white54,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _requestOtp,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded, size: 18),
+                    label: Text(
+                      _isLoading ? 'Đang gửi...' : 'Gửi mã xác nhận',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                const Text(
+                  'Vui lòng kiểm tra Gmail và nhập mã OTP 6 số để tạo mật khẩu mới.',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF475569)),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _otpCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Mã OTP (6 số)',
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    prefixIcon: const Icon(
+                      Icons.pin_outlined,
+                      size: 20,
+                      color: Colors.white54,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _newPassCtrl,
+                  obscureText: _obscureNew,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Mật khẩu mới',
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    prefixIcon: const Icon(
+                      Icons.lock_open_outlined,
+                      size: 20,
+                      color: Colors.white54,
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed: () =>
+                          setState(() => _obscureNew = !_obscureNew),
+                      icon: Icon(
+                        _obscureNew
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: Colors.white54,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => setState(() => _step = 1),
+                      child: const Text(
+                        'Quay lại',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _submitResetPassword,
+                      icon: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.check_rounded, size: 18),
+                      label: Text(
+                        _isLoading ? 'Đang xử lý...' : 'Đặt lại mật khẩu',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

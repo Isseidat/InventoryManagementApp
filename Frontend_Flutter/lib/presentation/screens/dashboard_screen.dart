@@ -363,8 +363,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colors.card,
@@ -474,8 +473,7 @@ class _ActivityTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return Container(
       decoration: BoxDecoration(
         color: colors.card,
         borderRadius: BorderRadius.circular(12),
@@ -697,8 +695,7 @@ class _QuickActions extends StatelessWidget {
       (Icons.analytics_outlined, 'Xem Báo cáo', const Color(0xFF6366F1)),
     ];
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return Container(
       decoration: BoxDecoration(
         color: colors.card,
         borderRadius: BorderRadius.circular(12),
