@@ -128,34 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 1.6,
                           ),
                         ),
-                        // const SizedBox(height: 48),
-                        // // Feature list
-                        // ...[
-                        //   ('Quản lý hàng tồn kho thời gian thực', Icons.inventory_outlined),
-                        //   ('Phân quyền người dùng chi tiết', Icons.admin_panel_settings_outlined),
-                        //   ('Báo cáo & phân tích chuyên sâu', Icons.analytics_outlined),
-                        // ].map((f) => Padding(
-                        //   padding: const EdgeInsets.symmetric(vertical: 8),
-                        //   child: Row(
-                        //     mainAxisSize: MainAxisSize.min,
-                        //     children: [
-                        //       Container(
-                        //         padding: const EdgeInsets.all(6),
-                        //         decoration: BoxDecoration(
-                        //           color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                        //           borderRadius: BorderRadius.circular(8),
-                        //         ),
-                        //         child: Icon(f.$2, color: const Color(0xFF818CF8), size: 16),
-                        //       ),
-                        //       const SizedBox(width: 12),
-                        //       Text(
-                        //         f.$1,
-                        //         style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // )
-                        // ),
                       ],
                     ),
                   ),
@@ -198,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 40),
 
                         // Username
-                        _buildLabel('Mật khẩu'),
+                        _buildLabel('Tên đăng nhập'),
                         const SizedBox(height: 6),
                         _buildTextField(
                           controller: _usernameController,

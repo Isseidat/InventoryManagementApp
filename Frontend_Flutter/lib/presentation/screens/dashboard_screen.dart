@@ -9,7 +9,10 @@ import '../blocs/dashboard/dashboard_bloc.dart';
 import '../blocs/dashboard/dashboard_state.dart';
 
 class DashboardOverview extends StatefulWidget {
-  const DashboardOverview({super.key});
+  final Function(int)? onNavigate;
+  final Function(String)? onNavigateAction;
+
+  const DashboardOverview({super.key, this.onNavigate, this.onNavigateAction});
 
   @override
   State<DashboardOverview> createState() => _DashboardOverviewState();
@@ -191,6 +194,7 @@ class _DashboardOverviewState extends State<DashboardOverview>
                         child: _QuickActions(
                           roleName: user.roleName,
                           colors: colors,
+                          onAction: widget.onNavigateAction,
                         ),
                       ),
                     ],
@@ -680,19 +684,39 @@ class _TableRowState extends State<_TableRow> {
 class _QuickActions extends StatelessWidget {
   final String roleName;
   final Tok colors;
+  final Function(String)? onAction;
 
-  const _QuickActions({required this.roleName, required this.colors});
+  const _QuickActions({
+    required this.roleName,
+    required this.colors,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.add_box_outlined, 'Tạo Phiếu Nhập', const Color(0xFF10B981)),
-      (Icons.outbox_outlined, 'Tạo Phiếu Xuất', const Color(0xFF3B82F6)),
+      (Icons.add_box_outlined, 'Tạo Phiếu Nhập', const Color(0xFF10B981), 'po'),
+      (Icons.outbox_outlined, 'Tạo Phiếu Xuất', const Color(0xFF3B82F6), 'so'),
       if (roleName == 'Admin' || roleName == 'Manager')
-        (Icons.fact_check_outlined, 'Duyệt Đơn hàng', const Color(0xFFF59E0B)),
+        (
+          Icons.fact_check_outlined,
+          'Duyệt Đơn hàng',
+          const Color(0xFFF59E0B),
+          'approve',
+        ),
       if (roleName == 'Admin')
-        (Icons.person_add_outlined, 'Thêm Nhân sự', const Color(0xFF8B5CF6)),
-      (Icons.analytics_outlined, 'Xem Báo cáo', const Color(0xFF6366F1)),
+        (
+          Icons.person_add_outlined,
+          'Thêm Nhân sự',
+          const Color(0xFF8B5CF6),
+          'add_staff',
+        ),
+      (
+        Icons.analytics_outlined,
+        'Xem Báo cáo',
+        const Color(0xFF6366F1),
+        'report',
+      ),
     ];
 
     return Container(
@@ -721,6 +745,7 @@ class _QuickActions extends StatelessWidget {
               label: item.$2,
               color: item.$3,
               colors: colors,
+              onTap: () => onAction?.call(item.$4),
             ),
           ),
           const SizedBox(height: 8),
@@ -735,12 +760,14 @@ class _ActionRow extends StatefulWidget {
   final String label;
   final Color color;
   final Tok colors;
+  final VoidCallback? onTap;
 
   const _ActionRow({
     required this.icon,
     required this.label,
     required this.color,
     required this.colors,
+    this.onTap,
   });
 
   @override
@@ -757,6 +784,7 @@ class _ActionRowState extends State<_ActionRow> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
+        onTap: widget.onTap,
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),

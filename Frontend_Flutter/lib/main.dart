@@ -7,6 +7,10 @@ import 'presentation/blocs/dashboard/dashboard_bloc.dart';
 import 'presentation/blocs/dashboard/dashboard_event.dart';
 import 'presentation/blocs/product/product_bloc.dart';
 import 'presentation/blocs/product/product_event.dart';
+import 'presentation/blocs/transaction/transaction_bloc.dart';
+import 'presentation/blocs/transaction/transaction_event.dart';
+import 'presentation/blocs/staff/staff_bloc.dart';
+import 'presentation/blocs/staff/staff_event.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
@@ -45,6 +49,12 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider(
           create: (_) => di.sl<ProductBloc>()..add(ProductListRequested()),
+        ),
+        BlocProvider(
+          create: (_) => di.sl<TransactionBloc>()..add(TransactionListRequested()),
+        ),
+        BlocProvider(
+          create: (_) => di.sl<StaffBloc>()..add(StaffListRequested()),
         ),
         BlocProvider.value(
           value: di.sl<ThemeCubit>(),

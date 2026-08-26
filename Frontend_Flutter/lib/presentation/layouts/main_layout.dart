@@ -13,8 +13,14 @@ import '../screens/user_profile_screen.dart';
 import '../../core/theme/theme_cubit.dart';
 
 import '../screens/product_screen.dart';
+import '../screens/transaction_screen.dart';
+import '../screens/staff_screen.dart';
 import '../blocs/product/product_bloc.dart';
 import '../blocs/product/product_event.dart';
+import '../blocs/transaction/transaction_bloc.dart';
+import '../blocs/transaction/transaction_event.dart';
+import '../blocs/staff/staff_bloc.dart';
+import '../blocs/staff/staff_event.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -25,18 +31,41 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
-
   Key _profileKey = UniqueKey();
+  Key _transactionKey = UniqueKey();
+  
+  String _transactionTab = 'import';
+  bool _triggerCreateTransaction = false;
   
   List<Widget> get _pages => [
-    const DashboardOverview(),
+    DashboardOverview(
+      onNavigate: (index) => setState(() => _selectedIndex = index),
+      onNavigateAction: (action) {
+        if (action == 'po') {
+          setState(() {
+            _selectedIndex = 2;
+            _transactionTab = 'import';
+            _triggerCreateTransaction = true;
+            _transactionKey = UniqueKey();
+          });
+        } else if (action == 'so') {
+          setState(() {
+            _selectedIndex = 2;
+            _transactionTab = 'export';
+            _triggerCreateTransaction = true;
+            _transactionKey = UniqueKey();
+          });
+        }
+      },
+    ),
     const ProductScreen(),
-    const Center(
-      child: Text('Nhập / Xuất Kho', style: TextStyle(fontSize: 24)),
+    TransactionScreen(
+      key: _transactionKey,
+      initialTab: _transactionTab,
+      triggerCreate: _triggerCreateTransaction,
+      onResetTrigger: () => setState(() => _triggerCreateTransaction = false),
     ),
-    const Center(
-      child: Text('Quản lý Nhân sự', style: TextStyle(fontSize: 24)),
-    ),
+    const StaffScreen(),
     const Center(
       child: Text('Cài đặt hệ thống', style: TextStyle(fontSize: 24)),
     ),
@@ -257,6 +286,14 @@ class _MainLayoutState extends State<MainLayout> {
                                 context.read<ProductBloc>().add(
                                   ProductListRequested(),
                                 );
+                              } else if (_selectedIndex == 2) {
+                                context.read<TransactionBloc>().add(
+                                  TransactionListRequested(),
+                                );
+                              } else if (_selectedIndex == 3) {
+                                context.read<StaffBloc>().add(
+                                  StaffListRequested(),
+                                );
                               } else if (_selectedIndex == 5) {
                                 setState(() => _profileKey = UniqueKey());
                               }
@@ -324,9 +361,11 @@ class _MainLayoutState extends State<MainLayout> {
                           const SizedBox(width: 16),
 
                           // Avatar Block
-                          Row(
-                            children: [
-                              PopupMenuButton<String>(
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                PopupMenuButton<String>(
                                 tooltip: '',
                                 offset: const Offset(0, 40),
                                 shape: RoundedRectangleBorder(
@@ -394,30 +433,37 @@ class _MainLayoutState extends State<MainLayout> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    user.fullName,
-                                    style: TextStyle(
-                                      color: colors.textPrimary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      user.fullName,
+                                      style: TextStyle(
+                                        color: colors.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                  Text(
-                                    user.roleName == 'Admin'
-                                        ? 'Administrator'
-                                        : (user.jobTitle ?? user.roleName),
-                                    style: TextStyle(
-                                      color: colors.textSecond,
-                                      fontSize: 11,
+                                    Text(
+                                      user.roleName == 'Admin'
+                                          ? 'Administrator'
+                                          : (user.jobTitle ?? user.roleName),
+                                      style: TextStyle(
+                                        color: colors.textSecond,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ],
+                          ),
                           ),
                         ],
                       ),
